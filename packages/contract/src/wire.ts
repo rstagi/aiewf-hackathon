@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ExtendedTraceEnvelope, Arm } from "./trace";
-import type { AgentConfig } from "./config";
+import type { AgentConfig, ConfigChange } from "./config";
 
 export type ChatRole = "user" | "assistant";
 
@@ -53,6 +53,27 @@ export interface Transcript {
 
 // ── Cloud → SDK: active-config fetch (GET /api/config/active) ─────────────────
 export interface ActiveConfigResponseData {
+  config: AgentConfig;
+}
+
+// ── Optimizer/operator → Cloud: derive a child snapshot (POST /api/config) ────
+/** Apply one optimization to a parent (default: active champion), minting a child. */
+export interface ApplyChangeRequest {
+  /** Snapshot to derive from. Omitted ⇒ the current active champion. */
+  parentId?: string;
+  change: ConfigChange;
+}
+export interface ApplyChangeResponseData {
+  /** The freshly minted (or deduped) child snapshot. NOT yet champion — promote separately. */
+  config: AgentConfig;
+}
+
+// ── Optimizer/operator → Cloud: promote a snapshot to champion (POST /api/promote) ─
+/** Flip the active pointer to `id` — this is BOTH promote and rollback. */
+export interface PromoteRequest {
+  id: string;
+}
+export interface PromoteResponseData {
   config: AgentConfig;
 }
 

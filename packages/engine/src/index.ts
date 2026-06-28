@@ -35,8 +35,13 @@ export type {
   DetectorDeps,
   Flag,
   FlagKind,
+  GridCell,
   IntentFunnel,
 } from "./intelligence/detector/types";
+export type { InventoryEntry } from "./intelligence/types";
+
+// ── Retrieval-quality signals (success@k, MRR) over reconstructed sessions ──
+export { successAtK, mrr } from "./intelligence/signals/retrieval";
 
 // ── Intent clustering (deterministic Phase-0 baseline) ──
 export { DeterministicIntentClusterer, tokenize } from "./intelligence/dimensions/intent/cluster";

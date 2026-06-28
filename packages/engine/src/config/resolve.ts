@@ -47,6 +47,13 @@ export function deriveChild(parent: AgentConfig, change: ConfigChange): ConfigDr
         return normalizeSkill({ ...skill, description: change.to });
       case "set_suggested_model":
         return normalizeSkill({ ...skill, suggested_model: change.to });
+      default: {
+        // Exhaustiveness guard: a new ConfigChange kind must add a branch above, and an
+        // unknown kind smuggled past route validation fails loudly here, not as a later
+        // undefined-skill TypeError.
+        const _exhaustive: never = change;
+        throw new Error(`deriveChild: unsupported change kind '${(change as ConfigChange).kind}'`);
+      }
     }
   });
   return {

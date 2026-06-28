@@ -73,7 +73,7 @@ export async function emitTraces(
   if (envelopes.length === 0) return envelopes;
   const batch: TraceBatch = { envelopes };
   try {
-    await fetch(`${opts.cloudUrl}/api/traces`, {
+    const res = await fetch(`${opts.cloudUrl}/api/traces`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -81,6 +81,14 @@ export async function emitTraces(
       },
       body: JSON.stringify(batch),
     });
+    if (!res.ok) {
+      // Non-fatal, but visible: a 401 (bad/missing SIA_API_KEY) otherwise drops silently
+      // and the dashboard just looks empty while the run reports success.
+      console.warn(
+        `[sia/sdk] trace emit rejected (${res.status} ${res.statusText}); ` +
+          `${envelopes.length} envelopes dropped — check SIA_API_KEY.`,
+      );
+    }
   } catch {
     // drop-on-failure: telemetry must never kill the agent.
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { appendFileSync, mkdirSync } from "node:fs";
 import type { ApiResponse, TraceBatch } from "@sia/contract";
+import { requireApiKey } from "@/lib/auth";
 import { RUNTIME_DIR, TRACES_PATH } from "@/lib/paths";
 
 export const runtime = "nodejs";
@@ -9,9 +10,13 @@ type TracesResponseData = { received: number };
 
 /**
  * The SDK POSTs a fire-and-forget batch of trace envelopes at end-of-run. We append
- * each as one JSONL line — this just needs to be correct + fast.
+ * each as one JSONL line — this just needs to be correct + fast. Guarded by the
+ * shared inbound key (when SIA_API_KEY is set); the SDK forwards it as a bearer.
  */
 export async function POST(req: Request): Promise<NextResponse<ApiResponse<TracesResponseData>>> {
+  const denied = requireApiKey(req);
+  if (denied) return denied;
+
   let body: TraceBatch;
   try {
     body = (await req.json()) as TraceBatch;
