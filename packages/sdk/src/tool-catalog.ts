@@ -38,10 +38,16 @@ export function buildToolCatalog(
   );
   for (const snapshot of config.skills) {
     const def = defs.get(snapshot.skillId);
+    // A Cloud-authored skill has NO local SkillDefinition (`def === undefined`); its name/tags
+    // (and its body, used by the executor) ride on the snapshot. Prefer those, so a brand-new
+    // skill is actually BM25-retrievable with no redeploy. For seed skills the snapshot carries
+    // no name/tags, so this falls back to `def` and is byte-identical to before (golden stays green).
+    const name = snapshot.name ?? def?.name ?? snapshot.skillId;
+    const tags = snapshot.tags ?? def?.tags ?? [];
     catalog.register({
       id: snapshot.skillId,
-      name: def?.name ?? snapshot.skillId,
-      description: searchableDescription(snapshot.description, def?.tags ?? []),
+      name,
+      description: searchableDescription(snapshot.description, tags),
       inputSchema: { type: "object", properties: { utterance: { type: "string" } } },
       outputSchema: { type: "object" },
       execute: (args: Record<string, unknown>) => execute(snapshot.skillId, args),

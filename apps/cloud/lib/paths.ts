@@ -21,3 +21,5 @@ export function findRepoRoot(): string {
 export const RUNTIME_DIR = path.join(findRepoRoot(), "data", "runtime");
 export const TRACES_PATH = path.join(RUNTIME_DIR, "traces.jsonl");
 export const REGISTRY_DIR = path.join(RUNTIME_DIR, "registry");
+/** Self-healing proposals, file-store fallback (a single JSON array). */
+export const PROPOSALS_PATH = path.join(RUNTIME_DIR, "proposals.json");

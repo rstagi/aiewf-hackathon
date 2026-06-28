@@ -23,15 +23,24 @@ importers:
 
   apps/cloud:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: 2.0.83
+        version: 2.0.83(zod@3.25.76)
       '@sia/contract':
         specifier: workspace:*
         version: link:../../packages/contract
       '@sia/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@sia/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@sia/seed':
         specifier: workspace:*
         version: link:../../data/seed
+      ai:
+        specifier: 6.0.214
+        version: 6.0.214(zod@3.25.76)
       mongodb:
         specifier: ^6.12.0
         version: 6.21.0
@@ -44,6 +53,9 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -60,6 +72,9 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.3.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
       typescript:
         specifier: ^5
         version: 5.9.3

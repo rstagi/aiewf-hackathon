@@ -12,6 +12,11 @@ export function deepFreeze<T>(obj: T): T {
 
 function normalizeSkill(skill: SkillSnapshot): SkillSnapshot {
   const out: SkillSnapshot = { skillId: skill.skillId, description: skill.description };
+  // Cloud-authored body fields must survive normalization, or a stored snapshot would lose
+  // them and its surface would no longer hash to its `id` (content-hash divergence).
+  if (skill.name !== undefined) out.name = skill.name;
+  if (skill.tags !== undefined) out.tags = [...skill.tags];
+  if (skill.instructions !== undefined) out.instructions = skill.instructions;
   if (skill.suggested_model !== undefined) out.suggested_model = skill.suggested_model;
   return out;
 }
@@ -36,6 +41,29 @@ export function freezeConfig(draft: ConfigDraft, parentId?: string): AgentConfig
  * `to` regardless so a re-proposed change is idempotent).
  */
 export function deriveChild(parent: AgentConfig, change: ConfigChange): ConfigDraft {
+  // `add_skill` APPENDS a brand-new capability, so its precondition is the INVERSE of the
+  // mutating kinds': the skill must NOT already exist. Handle it before the must-exist guard.
+  if (change.kind === "add_skill") {
+    if (parent.skills.some((s) => s.skillId === change.skillId)) {
+      throw new Error(`deriveChild: skill '${change.skillId}' already exists in config ${parent.id}`);
+    }
+    const appended = normalizeSkill({
+      skillId: change.skillId,
+      description: change.description,
+      name: change.name,
+      tags: change.tags,
+      instructions: change.instructions,
+      ...(change.suggested_model !== undefined ? { suggested_model: change.suggested_model } : {}),
+    });
+    return {
+      systemPrompt: parent.systemPrompt,
+      skills: [...parent.skills.map(normalizeSkill), appended],
+      tools: [...parent.tools],
+      modelDefault: parent.modelDefault,
+    };
+  }
+
+  // Mutating kinds: the targeted skill MUST exist.
   const target = parent.skills.find((s) => s.skillId === change.skillId);
   if (!target) {
     throw new Error(`deriveChild: skill '${change.skillId}' not found in config ${parent.id}`);

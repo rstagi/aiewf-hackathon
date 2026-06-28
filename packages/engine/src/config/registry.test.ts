@@ -110,6 +110,51 @@ describe("deriveChild", () => {
   });
 });
 
+describe("deriveChild add_skill (Cloud-authored capability)", () => {
+  const newSkill = {
+    kind: "add_skill" as const,
+    skillId: "live-agent-handoff",
+    name: "Live Agent Handoff",
+    description: "Connect the user to a human support agent.",
+    tags: ["human", "agent", "handoff"],
+    instructions: "Collect the issue summary, then route the user to a live human agent.",
+  };
+
+  it("appends a brand-new skill carrying its own body, without touching the parent", async () => {
+    const reg = await openMemoryRegistry();
+    const parent = await reg.seed(baseDraft);
+    const child = deriveChild(parent, newSkill);
+    expect(child.skills).toHaveLength(parent.skills.length + 1);
+    const added = child.skills.find((s) => s.skillId === "live-agent-handoff")!;
+    expect(added.name).toBe("Live Agent Handoff");
+    expect(added.tags).toEqual(["human", "agent", "handoff"]);
+    expect(added.instructions).toContain("live human agent");
+    expect(parent.skills.some((s) => s.skillId === "live-agent-handoff")).toBe(false); // parent untouched
+  });
+
+  it("mints a new content id with parent lineage", async () => {
+    const reg = await openMemoryRegistry();
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, newSkill);
+    expect(v2.id).not.toBe(v1.id);
+    expect(v2.parentId).toBe(v1.id);
+  });
+
+  it("throws when the skill already exists (inverse of the mutating-kind precondition)", async () => {
+    const reg = await openMemoryRegistry();
+    const parent = await reg.seed(baseDraft);
+    expect(() => deriveChild(parent, { ...newSkill, skillId: "account-recovery" })).toThrow(/already exists/);
+  });
+
+  it("leaves any body-less surface hashing exactly as before (genesis stability)", () => {
+    const bodyless: ConfigDraft = {
+      ...baseDraft,
+      skills: baseDraft.skills.map((s) => ({ ...s, name: undefined, tags: undefined, instructions: undefined })),
+    };
+    expect(contentHash(bodyless)).toBe(contentHash(baseDraft));
+  });
+});
+
 describe("modelForSkill", () => {
   it("falls back to the default when no override", async () => {
     const reg = await openMemoryRegistry();
@@ -234,5 +279,35 @@ describe("FileConfigStore persistence", () => {
     expect(reopened.list().map((c) => c.id).sort()).toEqual([v1.id, v2.id].sort());
     expect(reopened.get(v2.id)?.parentId).toBe(v1.id);
     expect(Object.isFrozen(reopened.get(v1.id))).toBe(true);
+  });
+
+  it("preserves a Cloud-authored skill body across reopen, with no content-hash divergence", async () => {
+    const reg = await openFileRegistry(dir);
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, {
+      kind: "add_skill",
+      skillId: "live-agent-handoff",
+      name: "Live Agent Handoff",
+      description: "Connect the user to a human support agent.",
+      tags: ["human", "agent", "handoff"],
+      instructions: "Route the user to a live human agent.",
+    });
+
+    const reopened = await ConfigRegistry.open(new FileConfigStore(dir));
+    const got = reopened.get(v2.id)!;
+    const added = got.skills.find((s) => s.skillId === "live-agent-handoff")!;
+    expect(added.name).toBe("Live Agent Handoff");
+    expect(added.tags).toEqual(["human", "agent", "handoff"]);
+    expect(added.instructions).toBe("Route the user to a live human agent.");
+    // The reloaded surface still hashes to its stored id — proves normalizeSkill carried the
+    // body through (a body-stripping normalize would make this diverge).
+    expect(
+      contentHash({
+        systemPrompt: got.systemPrompt,
+        skills: got.skills,
+        tools: got.tools,
+        modelDefault: got.modelDefault,
+      }),
+    ).toBe(v2.id);
   });
 });

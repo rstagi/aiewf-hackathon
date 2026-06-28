@@ -25,12 +25,24 @@ export {
 } from "./config/index";
 export type { ConfigStore } from "./config/types";
 
+// ── Usage ingest log (the analyzer's input) — File/Memory in-engine, Mongo in the Cloud ──
+export { MemoryUsageStore, FileUsageStore } from "./usage/store";
+export type { UsageStore } from "./usage/types";
+
+// ── Self-healing proposals (the analyze → apply unit) ──
+export { MemoryProposalStore, FileProposalStore } from "./proposals/store";
+export type { ProposalStore } from "./proposals/types";
+
 // ── Skills ──
 export { indexSkillDefs } from "./skills/types";
 
 // ── Trace ingest → reconstructed sessions ──
 export { parseTraceJsonl, groupBySession } from "./intelligence/trace/ingest";
 export { buildSessions, buildSession } from "./intelligence/trace/session";
+
+// ── Gap detection (the v4 gate: cluster missed queries → route create/improve) ──
+export { detectGaps } from "./intelligence/gaps";
+export type { GapCluster, GapCandidate, GapRoute, DetectGapsOptions } from "./intelligence/gaps";
 
 // ── Intent clustering (deterministic Jaccard baseline) ──
 export { DeterministicIntentClusterer, tokenize } from "./intelligence/dimensions/intent/cluster";

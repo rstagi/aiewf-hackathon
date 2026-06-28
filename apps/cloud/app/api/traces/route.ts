@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { appendFileSync, mkdirSync } from "node:fs";
 import type { ApiResponse, TraceBatch } from "@sia/contract";
 import { requireApiKey } from "@/lib/auth";
-import { RUNTIME_DIR, TRACES_PATH } from "@/lib/paths";
+import { getUsageStore } from "@/lib/stores";
 
 export const runtime = "nodejs";
 
 type TracesResponseData = { received: number };
 
 /**
- * The SDK POSTs a fire-and-forget batch of trace envelopes at end-of-run. We append
- * each as one JSONL line — this just needs to be correct + fast. Guarded by the
- * shared inbound key (when SIA_API_KEY is set); the SDK forwards it as a bearer.
+ * The SDK (or the demo driver) POSTs a batch of trace envelopes at end-of-run. Phase 1
+ * persists them through the UsageStore — Mongo when reachable, else the file fallback (same
+ * JSONL path as before) — so the analyzer can read the accumulated usage back. The `{ envelopes }`
+ * request + `{ ok, received }` response are unchanged, so the SDK emit path stays compatible.
  */
 export async function POST(req: Request): Promise<NextResponse<ApiResponse<TracesResponseData>>> {
   const denied = requireApiKey(req);
@@ -28,10 +28,6 @@ export async function POST(req: Request): Promise<NextResponse<ApiResponse<Trace
     return NextResponse.json({ ok: false, error: "Expected { envelopes: [...] }" }, { status: 400 });
   }
 
-  mkdirSync(RUNTIME_DIR, { recursive: true });
-  for (const env of body.envelopes) {
-    appendFileSync(TRACES_PATH, JSON.stringify(env) + "\n");
-  }
-
+  await (await getUsageStore()).append(body.envelopes);
   return NextResponse.json({ ok: true, received: body.envelopes.length });
 }

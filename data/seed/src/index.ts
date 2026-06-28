@@ -173,3 +173,33 @@ export const SCENARIOS: Scenario[] = [
   { id: "bill-2", intent: "refund invoice", utterance: "refund my invoice please", goldSkillId: "billing-refund" },
   { id: "bill-3", intent: "refund invoice", utterance: "how do i get a refund for an invoice", goldSkillId: "billing-refund" },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PHASE 1 — the SECOND planted weakness: a TRUE GAP (an intent with NO covering skill).
+//
+// "talk to a human" shares NONE of its content tokens ("talk" / "human" / "agent") with any
+// of the 7 seed skills' descriptions or tags, so these utterances retrieve nothing above the
+// invoke floor (often nothing at all) → every search in the cluster misses, with no near-miss
+// candidate. The deterministic Jaccard clusterer still groups them (they share "talk"+"human"),
+// and the analyzer routes the gap to CREATE-NEW: the Cloud authors a brand-new
+// `live-agent-handoff` skill (carrying its own body) — the create-new half of the demo,
+// alongside the improve-existing rewrite of `account-recovery`.
+//
+// ADDITIVE ONLY: SEED_SKILL_DEFS / SEED_CONFIG_DRAFT / SCENARIOS are untouched, so the genesis
+// hash (cfg_abd14cd40fc3) and the golden test stay green by construction.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** SkillId of the to-be-created capability — absent from the genesis catalog (this IS the gap). */
+export const GAP_SKILL_ID = "live-agent-handoff";
+
+export const GAP_SCENARIOS: Scenario[] = [
+  // ── GAP intent: talk to a human → live-agent-handoff (no covering skill in v1) ──
+  // Tight on the shared tokens {talk, human} (one varying verb each) so the Jaccard clusterer
+  // groups all three into ONE bucket; none of the 7 seed skills carry "talk"/"human" → no hits.
+  { id: "human-1", intent: "talk to a human", utterance: "i want to talk to a human", goldSkillId: GAP_SKILL_ID },
+  { id: "human-2", intent: "talk to a human", utterance: "let me talk to a human", goldSkillId: GAP_SKILL_ID },
+  { id: "human-3", intent: "talk to a human", utterance: "i need to talk to a human", goldSkillId: GAP_SKILL_ID },
+];
+
+/** The full Phase-1 demo traffic: the original paired scenarios PLUS the true-gap cluster. */
+export const DEMO_SCENARIOS: Scenario[] = [...SCENARIOS, ...GAP_SCENARIOS];

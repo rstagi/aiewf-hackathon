@@ -6,15 +6,20 @@
   "scripts": {
     "dev": "next dev -p 3210",
     "build": "next build",
-    "start": "next start -p 3210"
+    "start": "next start -p 3210",
+    "demo": "tsx scripts/phase1-demo.ts"
   },
   "dependencies": {
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "mongodb": "^6.12.0",
+    "ai": "6.0.214",
+    "@ai-sdk/anthropic": "2.0.83",
+    "zod": "3.25.76",
     "@sia/contract": "workspace:*",
     "@sia/engine": "workspace:*",
+    "@sia/sdk": "workspace:*",
     "@sia/seed": "workspace:*"
   },
   "devDependencies": {
@@ -23,6 +28,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "^4.19.2"
   }
 }

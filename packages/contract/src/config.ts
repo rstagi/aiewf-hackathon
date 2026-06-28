@@ -11,6 +11,18 @@ export interface SkillSnapshot {
   description: string;
   /** Per-skill model override. Lever 2 sets this. Undefined ⇒ use modelDefault. (snake_case mirrors Ratel wire.) */
   suggested_model?: string;
+  // ── Cloud-authored body (PLAN risk #3) ──────────────────────────────────────
+  // Present ONLY for skills the Cloud generated, which have NO local SkillDefinition.
+  // For seed skills these stay undefined and the local SkillDefinition supplies
+  // name/tags/instructions at retrieval time. Carrying the body on the snapshot is what
+  // makes a brand-new skill executable with no redeploy. They ARE part of the content hash
+  // (a new skill ⇒ a new version); a body-less snapshot hashes EXACTLY as before.
+  /** Display name — folded into BM25 text when there is no local SkillDefinition. */
+  name?: string;
+  /** Stable tags — folded into BM25 text when there is no local SkillDefinition. */
+  tags?: string[];
+  /** The playbook the executor follows when this skill is invoked (the skill body). */
+  instructions?: string;
 }
 
 /** A frozen, content-addressed snapshot of an agent's optimizable surface. */
@@ -30,11 +42,21 @@ export type ConfigDraft = Omit<AgentConfig, "id" | "parentId">;
 
 /**
  * A single optimization applied to a config surface to derive a child snapshot.
- * Exactly the two hero levers, description-first.
+ * The two hero levers (description-first), plus `add_skill` — the Cloud authoring a
+ * brand-new capability to close a true gap (it carries its own body; see SkillSnapshot).
  */
 export type ConfigChange =
   | { kind: "rewrite_skill_desc"; skillId: string; from?: string; to: string }
-  | { kind: "set_suggested_model"; skillId: string; from?: string; to: string };
+  | { kind: "set_suggested_model"; skillId: string; from?: string; to: string }
+  | {
+      kind: "add_skill";
+      skillId: string;
+      name: string;
+      description: string;
+      tags: string[];
+      instructions: string;
+      suggested_model?: string;
+    };
 
 export type ConfigChangeKind = ConfigChange["kind"];
 
