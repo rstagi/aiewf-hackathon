@@ -173,9 +173,3 @@ export const SCENARIOS: Scenario[] = [
   { id: "bill-2", intent: "refund invoice", utterance: "refund my invoice please", goldSkillId: "billing-refund" },
   { id: "bill-3", intent: "refund invoice", utterance: "how do i get a refund for an invoice", goldSkillId: "billing-refund" },
 ];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// The PERSONAL ASSISTANT corpus (Phase 3 example app) — additive, alongside the
-// customer-support corpus above so the Cloud's Phase-1 demo + golden test are untouched.
-// ─────────────────────────────────────────────────────────────────────────────
-export * from "./personal";

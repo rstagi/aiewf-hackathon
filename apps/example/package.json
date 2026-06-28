@@ -4,15 +4,31 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/run.ts"
+    "dev": "next dev -p 3300",
+    "build": "next build",
+    "start": "next start -p 3300",
+    "replay": "tsx src/run.ts"
   },
   "dependencies": {
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "ai": "6.0.214",
+    "@ai-sdk/anthropic": "2.0.83",
+    "zod": "3.25.76",
+    "@ratel-ai/sdk": "0.2.0",
     "@sia/contract": "workspace:*",
     "@sia/engine": "workspace:*",
     "@sia/sdk": "workspace:*",
     "@sia/seed": "workspace:*"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5",
     "tsx": "^4.19.2"
   }
 }

@@ -84,7 +84,7 @@ async function main(): Promise<void> {
       `${totalInvokes} invokes, ${totalEmitted} envelopes emitted to ${CLOUD_URL}.`,
   );
   console.log(`  configId on every envelope: ${config.id}`);
-  console.log(`  open ${CLOUD_URL}/dashboard to see the tagged sessions + the gated flag.`);
+  console.log(`  ingested usage is at ${CLOUD_URL} (live backend + active config) and GET ${CLOUD_URL}/api/config/active.`);
 }
 
 main().catch((err) => {
