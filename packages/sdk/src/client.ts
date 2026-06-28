@@ -13,6 +13,21 @@ export interface SdkConfig {
   cloudUrl: string;
   /** Inbound shared key for the Cloud (Phase 2). */
   apiKey?: string;
+  /**
+   * Target project on the multi-project Cloud — each project is its own namespace
+   * (catalog versions + active pointer + usage + proposals). Sent as the `x-sia-project`
+   * header; unset ⇒ the Cloud's default project. Pin one project for the whole run so the
+   * active config you fetch and the usage you emit can't straddle namespaces.
+   */
+  project?: string;
+}
+
+/** Bearer auth (if a key is set) + project routing (if a project is named) — on every Cloud call. */
+function clientHeaders(opts: SdkConfig): Record<string, string> {
+  return {
+    ...(opts.apiKey ? { authorization: `Bearer ${opts.apiKey}` } : {}),
+    ...(opts.project ? { "x-sia-project": opts.project } : {}),
+  };
 }
 
 /**
@@ -22,7 +37,7 @@ export interface SdkConfig {
  */
 export async function fetchActiveConfig(opts: SdkConfig): Promise<AgentConfig> {
   const res = await fetch(`${opts.cloudUrl}/api/config/active`, {
-    headers: opts.apiKey ? { authorization: `Bearer ${opts.apiKey}` } : {},
+    headers: clientHeaders(opts),
   });
   const body = (await res.json()) as ApiResponse<ActiveConfigResponseData>;
   if (!body.ok) throw new Error(`fetchActiveConfig: ${body.error}`);
@@ -75,10 +90,7 @@ export async function emitTraces(
   try {
     const res = await fetch(`${opts.cloudUrl}/api/traces`, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(opts.apiKey ? { authorization: `Bearer ${opts.apiKey}` } : {}),
-      },
+      headers: { "content-type": "application/json", ...clientHeaders(opts) },
       body: JSON.stringify(batch),
     });
     if (!res.ok) {

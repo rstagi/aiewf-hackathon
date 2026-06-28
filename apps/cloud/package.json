@@ -7,7 +7,8 @@
     "dev": "next dev -p 3210",
     "build": "next build",
     "start": "next start -p 3210",
-    "demo": "tsx scripts/phase1-demo.ts"
+    "demo": "tsx scripts/phase2-demo.ts",
+    "demo:phase1": "tsx scripts/phase1-demo.ts"
   },
   "dependencies": {
     "next": "16.2.9",
