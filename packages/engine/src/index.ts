@@ -1,6 +1,12 @@
 // @sia/engine — the framework-free brain.
-// Lifted ~as-is from lib/intelligence + lib/agentctx/config (archive/v1-pre-reset).
-// Config types come from @sia/contract; everything here is runtime logic.
+// Config types come from @sia/contract; everything here is runtime logic the Cloud
+// merely hosts (portable, testable, not Cloud-coupled).
+//
+// v4 surface = exactly the verified cores the self-healing loop reuses:
+//   • content-hashed config versions + pointer-flip promote/rollback (the catalog authority)
+//   • async storage boundary (File / Memory in-engine; Mongo lives in the Cloud)
+//   • deterministic Jaccard intent clustering
+//   • trace ingest → reconstructed sessions (usage → what the agent actually did)
 
 // ── Config registry: immutable content-hashed snapshots + pointer-flip promote/rollback ──
 export {
@@ -26,25 +32,14 @@ export { indexSkillDefs } from "./skills/types";
 export { parseTraceJsonl, groupBySession } from "./intelligence/trace/ingest";
 export { buildSessions, buildSession } from "./intelligence/trace/session";
 
-// ── Detector (Phase-0: model-free cross-reference engine) ──
-export { runDetector } from "./intelligence/detector/detector";
-export { DEFAULT_CONFIG } from "./intelligence/detector/types";
-export type {
-  DetectionConfig,
-  DetectionReport,
-  DetectorDeps,
-  Flag,
-  FlagKind,
-  GridCell,
-  IntentFunnel,
-} from "./intelligence/detector/types";
-export type { InventoryEntry } from "./intelligence/types";
-
-// ── Retrieval-quality signals (success@k, MRR) over reconstructed sessions ──
-export { successAtK, mrr } from "./intelligence/signals/retrieval";
-
-// ── Intent clustering (deterministic Phase-0 baseline) ──
+// ── Intent clustering (deterministic Jaccard baseline) ──
 export { DeterministicIntentClusterer, tokenize } from "./intelligence/dimensions/intent/cluster";
+export type {
+  IntentCluster,
+  IntentClustering,
+  IntentClusterer,
+  IntentAssignment,
+} from "./intelligence/dimensions/types";
 
 // ── Reconstructed session domain types ──
 export type { Session, SearchEvent, ToolCall, SkillInvoke, Turn } from "./intelligence/types";

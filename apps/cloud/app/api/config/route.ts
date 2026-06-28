@@ -8,8 +8,8 @@ export const runtime = "nodejs";
 /**
  * Derive (or dedup) a child config snapshot by applying one optimization to a parent
  * (default: the active champion). Returns the child id — it is NOT promoted here; the
- * caller flips the active pointer via POST /api/promote. This is the programmatic seam
- * the Phase-3 optimizer drives; the dashboard uses the in-process action instead.
+ * caller flips the active pointer via POST /api/promote. This is the programmatic seam the
+ * generate/apply loop drives (the Cloud is API-only — there is no dashboard action).
  */
 export async function POST(
   req: Request,
@@ -37,7 +37,7 @@ export async function POST(
   }
 
   try {
-    const config = applyChange(change, body.parentId);
+    const config = await applyChange(change, body.parentId);
     return NextResponse.json({ ok: true, config });
   } catch (e) {
     return NextResponse.json(

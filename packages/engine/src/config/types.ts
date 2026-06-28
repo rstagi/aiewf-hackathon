@@ -15,9 +15,22 @@ export type {
 
 import type { AgentConfig } from "@sia/contract";
 
-/** Persistence boundary for the registry. Swap File ⟷ Memory without touching logic. */
+/**
+ * Persistence boundary for the registry. Swap File ⟷ Memory ⟷ Mongo without
+ * touching the content-hash/dedup/pointer-flip logic.
+ *
+ * ASYNC by design: a Mongo-backed store does real network I/O. Only the three
+ * persistence ops are async — the registry loads everything into an in-memory Map
+ * once (at `open`) and serves all READS synchronously from there, so the SDK's
+ * JIT `GET /api/config/active` never awaits a round-trip.
+ */
 export interface ConfigStore {
-  load(): { snapshots: AgentConfig[]; activeId?: string };
-  appendSnapshot(config: AgentConfig): void;
-  saveActive(id: string): void;
+  /** Read the full version history + the active pointer (once, at registry open). */
+  load(): Promise<{ snapshots: AgentConfig[]; activeId?: string }>;
+  /** Durably append one immutable snapshot (idempotent on the content-hashed id). */
+  appendSnapshot(config: AgentConfig): Promise<void>;
+  /** Persist the active-pointer flip (this is BOTH promote and rollback). */
+  saveActive(id: string): Promise<void>;
+  /** Release any held resources (e.g. a Mongo client). Optional for in-memory stores. */
+  close?(): Promise<void>;
 }

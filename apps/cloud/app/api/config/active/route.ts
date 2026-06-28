@@ -9,7 +9,7 @@ export const runtime = "nodejs";
  * payload at the TOP level (`{ ok: true, config }`), mirroring the reference envelope.
  */
 export async function GET(): Promise<NextResponse<ApiResponse<ActiveConfigResponseData>>> {
-  const config = getRegistry().getActive();
+  const config = (await getRegistry()).getActive();
   if (!config) {
     return NextResponse.json({ ok: false, error: "no active config" }, { status: 500 });
   }

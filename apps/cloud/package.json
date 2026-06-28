@@ -12,6 +12,7 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "mongodb": "^6.12.0",
     "@sia/contract": "workspace:*",
     "@sia/engine": "workspace:*",
     "@sia/seed": "workspace:*"

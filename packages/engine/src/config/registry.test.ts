@@ -58,9 +58,9 @@ describe("contentHash", () => {
 });
 
 describe("deepFreeze + freezeConfig immutability", () => {
-  it("prevents mutation of a frozen config", () => {
-    const reg = openMemoryRegistry();
-    const cfg = reg.seed(baseDraft);
+  it("prevents mutation of a frozen config", async () => {
+    const reg = await openMemoryRegistry();
+    const cfg = await reg.seed(baseDraft);
     expect(() => {
       (cfg as { modelDefault: string }).modelDefault = "x";
     }).toThrow();
@@ -77,9 +77,9 @@ describe("deepFreeze + freezeConfig immutability", () => {
 });
 
 describe("deriveChild", () => {
-  it("rewrites a skill description without mutating the parent", () => {
-    const reg = openMemoryRegistry();
-    const parent = reg.seed(baseDraft);
+  it("rewrites a skill description without mutating the parent", async () => {
+    const reg = await openMemoryRegistry();
+    const parent = await reg.seed(baseDraft);
     const child = deriveChild(parent, {
       kind: "rewrite_skill_desc",
       skillId: "account-recovery",
@@ -89,9 +89,9 @@ describe("deriveChild", () => {
     expect(parent.skills[0].description).toBe("Recover an account."); // parent untouched
   });
 
-  it("sets a suggested model", () => {
-    const reg = openMemoryRegistry();
-    const parent = reg.seed(baseDraft);
+  it("sets a suggested model", async () => {
+    const reg = await openMemoryRegistry();
+    const parent = await reg.seed(baseDraft);
     const child = deriveChild(parent, {
       kind: "set_suggested_model",
       skillId: "doc-summary",
@@ -101,9 +101,9 @@ describe("deriveChild", () => {
     expect(parent.skills[1].suggested_model).toBeUndefined();
   });
 
-  it("throws on an unknown skill", () => {
-    const reg = openMemoryRegistry();
-    const parent = reg.seed(baseDraft);
+  it("throws on an unknown skill", async () => {
+    const reg = await openMemoryRegistry();
+    const parent = await reg.seed(baseDraft);
     expect(() =>
       deriveChild(parent, { kind: "rewrite_skill_desc", skillId: "nope", to: "x" }),
     ).toThrow(/not found/);
@@ -111,15 +111,15 @@ describe("deriveChild", () => {
 });
 
 describe("modelForSkill", () => {
-  it("falls back to the default when no override", () => {
-    const reg = openMemoryRegistry();
-    const cfg = reg.seed(baseDraft);
+  it("falls back to the default when no override", async () => {
+    const reg = await openMemoryRegistry();
+    const cfg = await reg.seed(baseDraft);
     expect(modelForSkill(cfg, "account-recovery")).toBe("claude-haiku-4-5");
   });
-  it("uses the override when present", () => {
-    const reg = openMemoryRegistry();
-    const parent = reg.seed(baseDraft);
-    const child = reg.applyChange(parent.id, {
+  it("uses the override when present", async () => {
+    const reg = await openMemoryRegistry();
+    const parent = await reg.seed(baseDraft);
+    const child = await reg.applyChange(parent.id, {
       kind: "set_suggested_model",
       skillId: "doc-summary",
       to: "claude-opus-4-8",
@@ -129,26 +129,26 @@ describe("modelForSkill", () => {
 });
 
 describe("ConfigRegistry", () => {
-  it("seeds a genesis config as champion", () => {
-    const reg = openMemoryRegistry();
-    const cfg = reg.seed(baseDraft);
+  it("seeds a genesis config as champion", async () => {
+    const reg = await openMemoryRegistry();
+    const cfg = await reg.seed(baseDraft);
     expect(reg.getActiveId()).toBe(cfg.id);
     expect(reg.getActive()).toEqual(cfg);
     expect(cfg.parentId).toBeUndefined();
   });
 
-  it("dedups identical surfaces to one snapshot", () => {
-    const reg = openMemoryRegistry();
-    const a = reg.register(baseDraft);
-    const b = reg.register({ ...baseDraft });
+  it("dedups identical surfaces to one snapshot", async () => {
+    const reg = await openMemoryRegistry();
+    const a = await reg.register(baseDraft);
+    const b = await reg.register({ ...baseDraft });
     expect(a.id).toBe(b.id);
     expect(reg.list()).toHaveLength(1);
   });
 
-  it("applyChange registers a child with parent lineage but does not promote it", () => {
-    const reg = openMemoryRegistry();
-    const v1 = reg.seed(baseDraft);
-    const v2 = reg.applyChange(v1.id, {
+  it("applyChange registers a child with parent lineage but does not promote it", async () => {
+    const reg = await openMemoryRegistry();
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, {
       kind: "rewrite_skill_desc",
       skillId: "account-recovery",
       to: "Reset a forgotten password.",
@@ -158,29 +158,29 @@ describe("ConfigRegistry", () => {
     expect(reg.getActiveId()).toBe(v1.id); // champion unchanged until promoted
   });
 
-  it("promote then rollback is a reversible pointer flip", () => {
-    const reg = openMemoryRegistry();
-    const v1 = reg.seed(baseDraft);
-    const v2 = reg.applyChange(v1.id, {
+  it("promote then rollback is a reversible pointer flip", async () => {
+    const reg = await openMemoryRegistry();
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, {
       kind: "set_suggested_model",
       skillId: "doc-summary",
       to: "claude-opus-4-8",
     });
-    reg.setActive(v2.id);
+    await reg.setActive(v2.id);
     expect(reg.getActiveId()).toBe(v2.id);
-    reg.setActive(v1.id); // rollback
+    await reg.setActive(v1.id); // rollback
     expect(reg.getActiveId()).toBe(v1.id);
   });
 
-  it("a change that recreates an ancestor surface resolves back to the ancestor id", () => {
-    const reg = openMemoryRegistry();
-    const v1 = reg.seed(baseDraft);
-    const v2 = reg.applyChange(v1.id, {
+  it("a change that recreates an ancestor surface resolves back to the ancestor id", async () => {
+    const reg = await openMemoryRegistry();
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, {
       kind: "rewrite_skill_desc",
       skillId: "account-recovery",
       to: "Reset a forgotten password.",
     });
-    const back = reg.applyChange(v2.id, {
+    const back = await reg.applyChange(v2.id, {
       kind: "rewrite_skill_desc",
       skillId: "account-recovery",
       to: "Recover an account.", // original text
@@ -188,20 +188,20 @@ describe("ConfigRegistry", () => {
     expect(back.id).toBe(v1.id); // dedup collapse ⇒ rollback is free
   });
 
-  it("throws when activating an unknown config", () => {
-    const reg = openMemoryRegistry();
-    expect(() => reg.setActive("cfg_deadbeef0000")).toThrow(/unknown config/);
+  it("throws when activating an unknown config", async () => {
+    const reg = await openMemoryRegistry();
+    await expect(reg.setActive("cfg_deadbeef0000")).rejects.toThrow(/unknown config/);
   });
 
-  it("builds root→leaf lineage", () => {
-    const reg = openMemoryRegistry();
-    const v1 = reg.seed(baseDraft);
-    const v2 = reg.applyChange(v1.id, {
+  it("builds root→leaf lineage", async () => {
+    const reg = await openMemoryRegistry();
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, {
       kind: "rewrite_skill_desc",
       skillId: "account-recovery",
       to: "Reset a forgotten password.",
     });
-    const v3 = reg.applyChange(v2.id, {
+    const v3 = await reg.applyChange(v2.id, {
       kind: "set_suggested_model",
       skillId: "doc-summary",
       to: "claude-opus-4-8",
@@ -219,17 +219,17 @@ describe("FileConfigStore persistence", () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it("round-trips snapshots and the active pointer across reopen", () => {
-    const reg = openFileRegistry(dir);
-    const v1 = reg.seed(baseDraft);
-    const v2 = reg.applyChange(v1.id, {
+  it("round-trips snapshots and the active pointer across reopen", async () => {
+    const reg = await openFileRegistry(dir);
+    const v1 = await reg.seed(baseDraft);
+    const v2 = await reg.applyChange(v1.id, {
       kind: "set_suggested_model",
       skillId: "doc-summary",
       to: "claude-opus-4-8",
     });
-    reg.setActive(v2.id);
+    await reg.setActive(v2.id);
 
-    const reopened = new ConfigRegistry(new FileConfigStore(dir));
+    const reopened = await ConfigRegistry.open(new FileConfigStore(dir));
     expect(reopened.getActiveId()).toBe(v2.id);
     expect(reopened.list().map((c) => c.id).sort()).toEqual([v1.id, v2.id].sort());
     expect(reopened.get(v2.id)?.parentId).toBe(v1.id);

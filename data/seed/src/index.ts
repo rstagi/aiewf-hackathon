@@ -8,17 +8,19 @@
 //                         with (descriptions = the optimizable lever-1 surface).
 //   • SCENARIOS          — paired synthetic traffic the example driver replays.
 //
-// THE DEMO NARRATIVE (PLAN risk #2 — "empty climax") is engineered HERE:
+// THE DEMO NARRATIVE (PLAN risk #4 — "before must be visibly broken") is engineered HERE:
 //   `account-recovery` is given a deliberately MEDIOCRE description and OFF-TARGET tags
 //   ("account / profile / settings" — never "password / reset / login"). So password-reset
-//   utterances retrieve it only weakly (one shared token, "account") → a hit is returned
-//   (funnel `found` > 0) but at a score BELOW the driver's invoke floor → the driver SKIPS
-//   it → the intent cluster leaks at the found→invoke stage → the detector fires a gated
-//   intent flag. Phase 2/3 then rewrite the description (lever 1) to clear the leak.
+//   utterances retrieve it only weakly (one shared token, "account") → a hit is returned but
+//   at a score BELOW the invoke floor → the agent SKIPS it. The deterministic Jaccard
+//   clusterer groups those misses into one intent where nothing cleared the floor — the v4
+//   gap gate. The Cloud then rewrites the description (improve-existing) to clear it.
 //
-// The other capabilities have on-target descriptions/tags so their intents convert and act
-// as the healthy comparison population the per-cluster Fisher test needs (a single eligible
-// cluster cannot fire — the test is each cluster vs the pooled others).
+// The other capabilities have on-target descriptions/tags so their intents convert cleanly —
+// the healthy population that makes the one leaking intent stand out.
+//
+// Phase 1 EXTENDS this corpus with a SECOND planted weakness — a true GAP (an intent with NO
+// covering skill) — so the loop can also demo "create-new" alongside "improve-existing".
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ConfigDraft, SkillDefinition } from "@sia/contract";
@@ -171,3 +173,9 @@ export const SCENARIOS: Scenario[] = [
   { id: "bill-2", intent: "refund invoice", utterance: "refund my invoice please", goldSkillId: "billing-refund" },
   { id: "bill-3", intent: "refund invoice", utterance: "how do i get a refund for an invoice", goldSkillId: "billing-refund" },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The PERSONAL ASSISTANT corpus (Phase 3 example app) — additive, alongside the
+// customer-support corpus above so the Cloud's Phase-1 demo + golden test are untouched.
+// ─────────────────────────────────────────────────────────────────────────────
+export * from "./personal";

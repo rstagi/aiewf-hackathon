@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SIA Cloud",
-  description: "Self-improving agent Cloud: config registry, trace ingest, and detection dashboard.",
+  description: "Self-improving agent Cloud: the catalog authority (content-hashed config versions + pointer-flip promote/rollback), usage ingest, and the self-healing loop.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

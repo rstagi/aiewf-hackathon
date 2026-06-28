@@ -27,7 +27,7 @@ export async function POST(
   }
 
   try {
-    const config = promote(body.id);
+    const config = await promote(body.id);
     return NextResponse.json({ ok: true, config });
   } catch (e) {
     // setActive throws on an unknown id.

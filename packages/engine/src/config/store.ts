@@ -2,18 +2,18 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { dirname, join } from "node:path";
 import type { AgentConfig, ConfigStore } from "./types";
 
-/** In-memory store — used by tests and ephemeral runs. */
+/** In-memory store — used by tests and ephemeral runs. No durability. */
 export class MemoryConfigStore implements ConfigStore {
   private snapshots: AgentConfig[] = [];
   private activeId?: string;
 
-  load() {
+  async load() {
     return { snapshots: [...this.snapshots], activeId: this.activeId };
   }
-  appendSnapshot(config: AgentConfig) {
+  async appendSnapshot(config: AgentConfig) {
     this.snapshots.push(config);
   }
-  saveActive(id: string) {
+  async saveActive(id: string) {
     this.activeId = id;
   }
 }
@@ -22,6 +22,10 @@ export class MemoryConfigStore implements ConfigStore {
  * File-backed store: append-only `snapshots.jsonl` (one frozen config per line)
  * plus a tiny `active.json` pointer. The append-only log is the version history;
  * the pointer is the champion. Promote/rollback only ever rewrites the pointer.
+ *
+ * This is the no-Mongo FALLBACK (PLAN risk #1): the demo never hard-depends on a
+ * live DB. Writes use synchronous fs under the async interface — they resolve
+ * immediately and stay durable across a Cloud restart.
  */
 export class FileConfigStore implements ConfigStore {
   private readonly snapshotsPath: string;
@@ -32,7 +36,7 @@ export class FileConfigStore implements ConfigStore {
     this.activePath = join(dir, "active.json");
   }
 
-  load() {
+  async load() {
     const snapshots: AgentConfig[] = [];
     if (existsSync(this.snapshotsPath)) {
       const raw = readFileSync(this.snapshotsPath, "utf8");
@@ -57,12 +61,12 @@ export class FileConfigStore implements ConfigStore {
     return { snapshots, activeId };
   }
 
-  appendSnapshot(config: AgentConfig) {
+  async appendSnapshot(config: AgentConfig) {
     this.ensureDir(this.snapshotsPath);
     appendFileSync(this.snapshotsPath, `${JSON.stringify(config)}\n`);
   }
 
-  saveActive(id: string) {
+  async saveActive(id: string) {
     this.ensureDir(this.activePath);
     writeFileSync(this.activePath, `${JSON.stringify({ activeId: id }, null, 2)}\n`);
   }
