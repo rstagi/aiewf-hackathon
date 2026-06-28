@@ -6,6 +6,8 @@ export const dynamic = "force-dynamic";
 
 interface ChatRequestBody {
   messages: ChatMessage[];
+  /** Stable per-conversation id from the client; pins the config + attributes traces. */
+  sessionId?: string;
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -21,7 +23,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   try {
-    const { answer, frame } = await runAgentTurn({ messages: body.messages });
+    const { answer, frame } = await runAgentTurn({ messages: body.messages, sessionId: body.sessionId });
     return Response.json({ answer, frame });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

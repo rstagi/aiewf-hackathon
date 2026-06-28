@@ -1,93 +1,71 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// @sia/example — the system-under-test driver.
+// @sia/example — traffic driver (`pnpm --filter @sia/example replay`).
 //
-// A tiny synthetic-traffic agent that integrates ONLY the SDK. On each run it:
-//   1. fetches the active AgentConfig from the Cloud JIT and PINS it for the whole run,
-//   2. builds a REAL Ratel BM25 catalog from that snapshot (+ local stable skill identity),
-//   3. replays paired scenarios: search → invoke the top hit IFF it clears the confidence
-//      floor, else skip (this is what makes the underperforming intent LEAK),
-//   4. drains the native trace buffer and fire-and-forget POSTs the envelopes back, tagged
-//      with the EXACT configId it consumed + arm.
+// Fires a batch of realistic, CLUSTERABLE assistant queries at the REAL agent
+// (runAgentTurn) to seed usage on the Cloud — so the self-healing loop has something to
+// learn from. Each query is its own session (its own pinned config + trace session). While
+// the `example-assistant` catalog is empty every search is a zero-hit miss; the Cloud
+// clusters those misses by intent and proposes brand-new skills.
 //
-// The app's optimizable surface (skill descriptions) is never in this code — it comes from
-// the Cloud. Rewrite a description in the Cloud and this same code retrieves differently.
+// Three intents × a few near-duplicate phrasings each → three clean gap clusters:
+//   • split-bill     (compose calculator + currency_convert)
+//   • daily-briefing (compose current_datetime + get_calendar + get_weather)
+//   • trip-day-plan  (compose web_search + get_weather + currency_convert + calculator)
+//
+// Point it at a throwaway project to verify without touching real data:
+//   SIA_PROJECT=phase3-verify pnpm --filter @sia/example replay
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { buildToolCatalog, emitTraces, fetchActiveConfig } from "@sia/sdk";
-import { indexSkillDefs } from "@sia/engine";
-import { SEED_SKILL_DEFS, SCENARIOS } from "@sia/seed";
+import "./sia/env"; // load repo-root .env.local (ANTHROPIC_API_KEY) before the agent runs
+import { runAgentTurn } from "./agent/runtime";
+import { CLOUD_URL, SIA_PROJECT } from "./sia/catalog";
 
-const CLOUD_URL = process.env.CLOUD_URL ?? "http://localhost:3210";
-const API_KEY = process.env.SIA_API_KEY; // Phase 2 inbound auth; unset in Phase 1.
-
-// Confidence floor for invoking the top hit. CALIBRATED against the real native BM25 over
-// the seed corpus: a strong single-intent match scores ~4.6–4.9, while the deliberately
-// mediocre `account-recovery` description matches a reset-password query at only ~2.5.
-// 3.5 sits cleanly between them (±1.0 margin) → healthy intents invoke, the leak skips.
-const INVOKE_FLOOR = Number(process.env.INVOKE_FLOOR ?? "3.5");
-const TOP_K = 5;
-
-/** Deterministic per-scenario session id — the join key for trace attribution. */
-function sessionIdFor(scenarioId: string): string {
-  return `sess-${scenarioId}`;
+interface DriveQuery {
+  intent: string;
+  utterance: string;
 }
 
+const QUERIES: DriveQuery[] = [
+  { intent: "split-bill", utterance: "Split a $84 dinner bill between 4 of us with a 20% tip" },
+  { intent: "split-bill", utterance: "Split a $120 dinner bill between 5 of us including the tip" },
+  { intent: "split-bill", utterance: "Split our dinner bill 3 ways and add a 20% tip" },
+  { intent: "daily-briefing", utterance: "Give me my daily briefing: today's schedule and the weather" },
+  { intent: "daily-briefing", utterance: "What's my daily briefing — my meetings today and the weather" },
+  { intent: "daily-briefing", utterance: "Daily briefing please: my calendar today plus the weather forecast" },
+  { intent: "trip-day-plan", utterance: "Plan a day trip to Lisbon with the weather and a budget" },
+  { intent: "trip-day-plan", utterance: "Plan my day trip to Lisbon — things to do, weather, and budget" },
+  { intent: "trip-day-plan", utterance: "Help me plan a day trip to Porto with weather and budget" },
+];
+
 async function main(): Promise<void> {
-  console.log(`→ fetching active config from ${CLOUD_URL} …`);
-  const config = await fetchActiveConfig({ cloudUrl: CLOUD_URL, apiKey: API_KEY });
-  console.log(`✓ pinned config ${config.id} (${config.skills.length} skills, model=${config.modelDefault})\n`);
+  console.log(`→ driving ${QUERIES.length} queries at the example agent`);
+  console.log(`  project=${SIA_PROJECT}  cloud=${CLOUD_URL}\n`);
 
-  // Stable skill identity is owned by the app (NON-optimizable); descriptions come from the
-  // fetched config (the Cloud's optimizable surface).
-  const defs = indexSkillDefs(SEED_SKILL_DEFS);
-
-  // Canned executor — Phase 1 needs no LLM. The skill body just acknowledges; what matters
-  // for the detector is the search + invoke trace, not the answer text.
-  const executor = async (skillId: string) => `[${skillId}] handled your request.`;
-
-  let totalSearches = 0;
-  let totalInvokes = 0;
-  let totalEmitted = 0;
-
-  for (const sc of SCENARIOS) {
-    const sessionId = sessionIdFor(sc.id);
-    const catalog = buildToolCatalog(config, defs, executor, { sessionId });
-    // Discard the registration churn so the emitted trace is just this run's search/invoke.
-    catalog.drainTraceEvents();
-
-    const hits = catalog.search(sc.utterance, TOP_K, "agent");
-    totalSearches++;
-    const top = hits[0];
-    const willInvoke = !!top && top.score >= INVOKE_FLOOR;
-
-    if (willInvoke) {
-      await catalog.invoke(top.toolId, { utterance: sc.utterance });
-      totalInvokes++;
+  let ok = 0;
+  for (const [i, q] of QUERIES.entries()) {
+    const sessionId = `sess-drive-${i}`;
+    try {
+      const { frame } = await runAgentTurn({ messages: [{ role: "user", content: q.utterance }], sessionId });
+      const top = frame.retrieved[0];
+      const topStr = top ? `${top.skillId}@${top.score.toFixed(2)}` : "(no hits)";
+      const skillStr = frame.invokedSkillIds.length ? `INVOKE ${frame.invokedSkillIds.join(",")}` : "no skill";
+      const tools = (frame.toolCalls ?? []).map((t) => t.toolId).join(", ") || "—";
+      console.log(`${String(i + 1).padStart(2)}. [${q.intent}] "${q.utterance}"`);
+      console.log(`    retrieved=${topStr}  ${skillStr}  native-tools=[${tools}]  outcome=${frame.outcome}`);
+      ok++;
+    } catch (err) {
+      console.error(`${String(i + 1).padStart(2)}. [${q.intent}] FAILED: ${err instanceof Error ? err.message : err}`);
     }
-
-    const sent = await emitTraces(
-      catalog,
-      { configId: config.id, arm: "champion" },
-      { cloudUrl: CLOUD_URL, apiKey: API_KEY },
-    );
-    totalEmitted += sent.length;
-
-    const topStr = top ? `${top.toolId}@${top.score.toFixed(2)}` : "(no hits)";
-    console.log(
-      `${sc.id.padEnd(7)} "${sc.utterance}"\n` +
-        `   intent=${sc.intent} top=${topStr} → ${willInvoke ? "INVOKE" : "skip (below floor)"}  [${sent.length} envelopes]`,
-    );
   }
 
-  console.log(
-    `\n✓ run complete — ${SCENARIOS.length} scenarios, ${totalSearches} searches, ` +
-      `${totalInvokes} invokes, ${totalEmitted} envelopes emitted to ${CLOUD_URL}.`,
-  );
-  console.log(`  configId on every envelope: ${config.id}`);
-  console.log(`  ingested usage is at ${CLOUD_URL} (live backend + active config) and GET ${CLOUD_URL}/api/config/active.`);
+  console.log(`\n✓ drive complete — ${ok}/${QUERIES.length} turns, traces emitted to project "${SIA_PROJECT}".`);
+  console.log(`\nNext — heal the catalog from this usage:`);
+  console.log(`  1. curl -s -XPOST '${CLOUD_URL}/api/analyze?project=${SIA_PROJECT}' | jq '.proposals[] | {id, intentLabel, route}'`);
+  console.log(`  2. curl -s -XPOST '${CLOUD_URL}/api/apply?project=${SIA_PROJECT}' -H 'content-type: application/json' -d '{"proposalId":"<id>"}' | jq`);
+  console.log(`  3. start a NEW chat session (or re-run this) — the agent now retrieves the authored skill.`);
 }
 
 main().catch((err) => {
-  console.error("✗ example run failed:", err instanceof Error ? err.message : err);
+  console.error("✗ drive failed:", err instanceof Error ? err.message : err);
   process.exitCode = 1;
 });

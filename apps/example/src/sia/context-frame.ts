@@ -1,47 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Context frame — a lightweight record of what the agent did this turn (which tools it
-// called, the answer, token usage). Rendered by the inspector panel and logged locally.
-// (When SIA lands, this also becomes the usage signal it learns from.)
+// Context frame — the host-side record of what the agent did this turn.
+//
+// Phase 3 adopts the CANONICAL `@sia/sdk` ContextFrame: a lossless superset of the
+// simpler frame this file used to define (it adds the retrieval dimension —
+// `floor`/`retrieved`/`invokedSkillIds`/`invokedBodies` — on top of the example's
+// `toolCalls`/`answer`/`steps`/`tokens`). Re-exported here so the existing import sites
+// (the runtime, the inspector UI) keep importing from one local module while the type
+// itself stays owned by the SDK (and, in Phase 4, crosses HTTP to the inspector).
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface ToolCallRecord {
-  toolId: string;
-  args: unknown;
-  result: string;
-}
-
-export type TurnOutcome = "answered" | "tool";
-
-export interface ContextFrame {
-  turnId: string;
-  ts: number;
-  model: string;
-  systemPrompt: string;
-  userQuery: string;
-  toolCalls: ToolCallRecord[];
-  answer: string;
-  steps: number;
-  tokens?: { input: number; output: number; total: number };
-  outcome: TurnOutcome;
-}
-
-export function buildContextFrame(
-  base: { model: string; systemPrompt: string; userQuery: string },
-  end: {
-    toolCalls: ToolCallRecord[];
-    answer: string;
-    steps: number;
-    tokens?: { input: number; output: number; total: number };
-  },
-): ContextFrame {
-  return {
-    turnId: `turn_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-    ts: Date.now(),
-    ...base,
-    toolCalls: end.toolCalls,
-    answer: end.answer,
-    steps: end.steps,
-    tokens: end.tokens,
-    outcome: end.toolCalls.length > 0 ? "tool" : "answered",
-  };
-}
+export { captureContextFrame, resolveSkillBody } from "@sia/sdk";
+export type {
+  ContextFrame,
+  ToolCallRecord,
+  RetrievedSkill,
+  FrameOutcome,
+  RetrievalHit,
+  CaptureFrameInput,
+} from "@sia/sdk";

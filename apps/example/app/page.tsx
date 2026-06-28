@@ -9,6 +9,7 @@ interface Msg {
 }
 
 interface CatalogView {
+  configId: string;
   modelDefault: string;
   tools: { id: string; description: string }[];
   skills: { skillId: string; name: string; description: string }[];
@@ -21,24 +22,41 @@ const SUGGESTIONS = [
   "Help me write a short thank-you note to a colleague",
 ];
 
+/** A stable per-conversation id: pins the session's config + attributes its traces. */
+function freshSessionId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return `sess-${crypto.randomUUID()}`;
+  return `sess-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [frame, setFrame] = useState<ContextFrame | null>(null);
   const [catalog, setCatalog] = useState<CatalogView | null>(null);
+  const [sessionId, setSessionId] = useState<string>(freshSessionId);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  async function loadCatalog() {
+    const res = await fetch("/api/catalog");
+    if (res.ok) setCatalog((await res.json()) as CatalogView);
+  }
+
   useEffect(() => {
-    void (async () => {
-      const res = await fetch("/api/catalog");
-      if (res.ok) setCatalog((await res.json()) as CatalogView);
-    })();
+    void loadCatalog();
   }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  /** Start a fresh session — a new conversation re-fetches (and so adopts any heal). */
+  function newChat() {
+    setMessages([]);
+    setFrame(null);
+    setSessionId(freshSessionId());
+    void loadCatalog();
+  }
 
   async function send(text: string) {
     const q = text.trim();
@@ -51,7 +69,7 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, sessionId }),
       });
       const data = (await res.json()) as { answer?: string; frame?: ContextFrame; error?: string };
       if (data.error) {
@@ -74,13 +92,21 @@ export default function Home() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Personal Assistant</h1>
           <p className="mt-1 max-w-2xl text-sm text-neutral-500 dark:text-neutral-400">
-            A simple AI agent with its own tools. Its <strong>skills catalog is empty for now</strong> —
-            it will be filled later by SIA.
+            A simple AI agent with its own tools. Its <strong>skills are managed by SIA</strong> in
+            the Cloud — the catalog grows from how you use the assistant.
           </p>
         </div>
-        <span className="self-start rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-          {catalog?.modelDefault ?? "…"}
-        </span>
+        <div className="flex items-center gap-2 self-start">
+          <button
+            onClick={newChat}
+            className="rounded-full border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-600 transition hover:border-neutral-400 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:text-white"
+          >
+            New chat
+          </button>
+          <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+            {catalog?.modelDefault ?? "…"}
+          </span>
+        </div>
       </header>
 
       <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
@@ -158,6 +184,10 @@ export default function Home() {
 }
 
 function Inspector({ frame }: { frame: ContextFrame | null }) {
+  const toolCalls = frame?.toolCalls ?? [];
+  const retrieved = frame?.retrieved ?? [];
+  const invoked = frame?.invokedSkillIds ?? [];
+
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mb-3 flex items-center justify-between">
@@ -165,33 +195,69 @@ function Inspector({ frame }: { frame: ContextFrame | null }) {
         {frame && (
           <span
             className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-              frame.outcome === "tool"
-                ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
-                : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+              invoked.length > 0
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                : toolCalls.length > 0
+                  ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+                  : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
             }`}
           >
-            {frame.outcome === "tool" ? `${frame.toolCalls.length} tool call(s)` : "answered directly"}
+            {invoked.length > 0
+              ? `skill: ${invoked.join(", ")}`
+              : toolCalls.length > 0
+                ? `${toolCalls.length} tool call(s)`
+                : "answered directly"}
           </span>
         )}
       </div>
       {!frame ? (
-        <p className="text-sm text-neutral-400">Send a message to see which tools the agent used.</p>
+        <p className="text-sm text-neutral-400">Send a message to see what context the agent assembled.</p>
       ) : (
         <div className="space-y-3 text-sm">
-          {frame.toolCalls.length === 0 && (
-            <p className="text-xs text-neutral-400">No tools used — answered from the model directly.</p>
-          )}
-          {frame.toolCalls.map((tc, i) => (
-            <div key={i}>
-              <div className="mb-1 text-xs uppercase tracking-wide text-neutral-400">{tc.toolId}</div>
-              <div className="font-mono text-xs text-neutral-500">{JSON.stringify(tc.args)}</div>
-              <div className="mt-1 whitespace-pre-wrap rounded-lg bg-neutral-50 p-2 text-xs dark:bg-neutral-800/60">
-                {tc.result}
+          {/* Retrieval — the SIA dimension. Empty catalog ⇒ nothing retrieved (the gap signal). */}
+          <div>
+            <div className="mb-1 text-xs uppercase tracking-wide text-neutral-400">Skills retrieved</div>
+            {retrieved.length === 0 ? (
+              <p className="text-xs text-neutral-400">
+                Nothing retrieved — no skill covers this yet. SIA clusters misses like this into new skills.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {retrieved.map((r) => (
+                  <div key={r.skillId} className="flex items-center justify-between font-mono text-xs">
+                    <span className={r.clearedFloor ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-500"}>
+                      {invoked.includes(r.skillId) ? "▸ " : "  "}
+                      {r.skillId}
+                    </span>
+                    <span className="text-neutral-400">
+                      {r.score.toFixed(2)}
+                      {r.clearedFloor ? " ✓" : ""}
+                    </span>
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
+
+          {/* Native tool calls. */}
+          {toolCalls.length > 0 && (
+            <div className="space-y-3 border-t border-neutral-100 pt-2 dark:border-neutral-800">
+              <div className="text-xs uppercase tracking-wide text-neutral-400">Native tools</div>
+              {toolCalls.map((tc, i) => (
+                <div key={i}>
+                  <div className="mb-1 text-xs uppercase tracking-wide text-neutral-400">{tc.toolId}</div>
+                  <div className="font-mono text-xs text-neutral-500">{JSON.stringify(tc.args)}</div>
+                  <div className="mt-1 whitespace-pre-wrap rounded-lg bg-neutral-50 p-2 text-xs dark:bg-neutral-800/60">
+                    {tc.result}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+
           <div className="flex justify-between border-t border-neutral-100 pt-2 text-xs text-neutral-400 dark:border-neutral-800">
-            <span>{frame.steps} steps</span>
+            <span>{frame.steps ?? 0} steps</span>
+            <span className="font-mono">{frame.configId}</span>
             {frame.tokens && <span>{frame.tokens.total} tokens</span>}
           </div>
         </div>
@@ -225,14 +291,14 @@ function CatalogCard({ catalog }: { catalog: CatalogView | null }) {
           Skills{catalog ? ` · ${catalog.skills.length}` : ""}
         </div>
         {catalog && catalog.skills.length === 0 ? (
-          <p className="text-xs text-neutral-400">Empty for now — to be filled by SIA.</p>
+          <p className="text-xs text-neutral-400">Empty for now — SIA grows these from observed usage.</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {catalog?.skills.map((s) => (
               <span
                 key={s.skillId}
                 title={s.description}
-                className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+                className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
               >
                 {s.name}
               </span>
