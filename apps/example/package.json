@@ -1,19 +1,18 @@
 {
-  "name": "@sia/sdk",
+  "name": "@sia/example",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
+  "scripts": {
+    "start": "tsx src/run.ts"
   },
   "dependencies": {
     "@sia/contract": "workspace:*",
-    "@ratel-ai/sdk": "0.2.0"
+    "@sia/engine": "workspace:*",
+    "@sia/sdk": "workspace:*",
+    "@sia/seed": "workspace:*"
   },
   "devDependencies": {
-    "@sia/engine": "workspace:*",
-    "@sia/seed": "workspace:*"
+    "tsx": "^4.19.2"
   }
 }

@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - apps/*
+  - data/seed
 
 # pnpm 10 blocks dependency build scripts by default; allow none (the @ratel-ai/sdk
 # native layer ships prebuilt as native/index.cjs, no build step needed).

@@ -1,5 +1,5 @@
 {
-  "name": "@sia/sdk",
+  "name": "@sia/seed",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,11 +9,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@sia/contract": "workspace:*",
-    "@ratel-ai/sdk": "0.2.0"
-  },
-  "devDependencies": {
-    "@sia/engine": "workspace:*",
-    "@sia/seed": "workspace:*"
+    "@sia/contract": "workspace:*"
   }
 }
