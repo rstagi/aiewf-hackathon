@@ -1,0 +1,54 @@
+{"v":1,"ts":1779216712301,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"upstream_register","server":"context7","transport":"StdioClientTransport","tool_count":2}
+{"v":1,"ts":1779216712302,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"context7__resolve-library-id"}
+{"v":1,"ts":1779216712302,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"context7__query-docs"}
+{"v":1,"ts":1779216712302,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"auth_refresh","upstream":"linear-server","ok":true}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"upstream_register","server":"linear-server","transport":"Object","tool_count":35}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_attachment"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__prepare_attachment_upload"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__create_attachment_from_upload"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__create_attachment"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__delete_attachment"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_comments"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__save_comment"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__delete_comment"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_cycles"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_document"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_documents"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__save_document"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__extract_images"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_issue"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_issues"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__save_issue"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_issue_statuses"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_issue_status"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_issue_labels"}
+{"v":1,"ts":1779216712586,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__create_issue_label"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_projects"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_project"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__save_project"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_project_labels"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_diff"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_diffs"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_diff_threads"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_milestones"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_milestone"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__save_milestone"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_teams"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_team"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__list_users"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__get_user"}
+{"v":1,"ts":1779216712587,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"index_churn","kind":"add","tool_id":"linear-server__search_documentation"}
+{"v":1,"ts":1779216804081,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"search","query":"context7 fetch library documentation","origin":"agent","top_k":3,"hits":[{"tool_id":"context7__query-docs","score":9.698053359985352},{"tool_id":"context7__resolve-library-id","score":9.571653366088867},{"tool_id":"linear-server__extract_images","score":4.345958709716797}],"stages":[{"name":"bm25","took_ms":5,"top_score":9.698053359985352}],"took_ms":5}
+{"v":1,"ts":1779216804081,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"gateway_search","query":"context7 fetch library documentation","origin":"agent","top_k":3,"hits":3,"took_ms":6}
+{"v":1,"ts":1779216808959,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"invoke_start","tool_id":"context7__resolve-library-id","args_size_bytes":90}
+{"v":1,"ts":1779216809847,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"upstream_invoke","server":"context7","tool_id":"context7__resolve-library-id","took_ms":888}
+{"v":1,"ts":1779216809847,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"invoke_end","tool_id":"context7__resolve-library-id","took_ms":888}
+{"v":1,"ts":1779216809847,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"gateway_invoke","tool_id":"context7__resolve-library-id","took_ms":889}
+{"v":1,"ts":1779216816281,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"invoke_start","tool_id":"context7__resolve-library-id","args_size_bytes":98}
+{"v":1,"ts":1779216817038,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"upstream_invoke","server":"context7","tool_id":"context7__resolve-library-id","took_ms":757}
+{"v":1,"ts":1779216817038,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"invoke_end","tool_id":"context7__resolve-library-id","took_ms":757}
+{"v":1,"ts":1779216817038,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"gateway_invoke","tool_id":"context7__resolve-library-id","took_ms":757}
+{"v":1,"ts":1779216828574,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"invoke_start","tool_id":"context7__query-docs","args_size_bytes":123}
+{"v":1,"ts":1779216829836,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"upstream_error","server":"context7","tool_id":"context7__query-docs","error":"MCP error -32000: Connection closed"}
+{"v":1,"ts":1779216829836,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"invoke_error","tool_id":"context7__query-docs","took_ms":1262,"error":"MCP error -32000: Connection closed"}
+{"v":1,"ts":1779216829836,"session_id":"2026-05-19T18-51-51-467Z-67g1lh","type":"gateway_error","tool_id":"context7__query-docs","error":"MCP error -32000: Connection closed"}

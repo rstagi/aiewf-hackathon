@@ -1,2 +1,41 @@
 # Local planning / scratch — not part of the repo history
 PLAN.md
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js
+.next/
+out/
+build/
+next-env.d.ts
+
+# Production
+/dist
+
+# Misc
+.DS_Store
+*.pem
+tsconfig.tsbuildinfo
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env files (keep .env.example)
+.env
+.env.local
+.env*.local
+
+# Vitest / coverage
+coverage/
+
+# Runtime-generated catalog data (seed data lives under data/seed/ and IS committed)
+/data/runtime/
+
+# Local scratch scripts
+/scratch-*

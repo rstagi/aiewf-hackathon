@@ -1,0 +1,19 @@
+{
+  "name": "aiewf-self-improving-agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ratel that optimizes itself — SDK emits traces + fetches config JIT; Cloud detects → proposes → A/B → auto-promotes.",
+  "scripts": {
+    "cloud": "pnpm --filter @sia/cloud dev",
+    "example": "pnpm --filter @sia/example start",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5",
+    "vitest": "^4.1.9"
+  }
+}
